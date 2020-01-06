@@ -1,3 +1,5 @@
 {
-    "python.pythonPath": "/home/user/anaconda3/envs/Drug_gp/bin/python"
+    "python.pythonPath": "/home/user/anaconda3/envs/Drug_gp/bin/python",
+    "python.linting.flake8Enabled": true,
+    "python.linting.pylintEnabled": false,
 }

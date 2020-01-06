@@ -5,7 +5,9 @@ References:
 - Paper: https://arxiv.org/abs/1609.02907
 - Code: https://github.com/tkipf/gcn
 """
-import argparse, time, math
+import argparse
+import time
+import math
 import numpy as np
 import networkx as nx
 import torch
@@ -16,6 +18,7 @@ from dgl.data import register_data_args, load_data
 
 
 def gcn_msg(edge):
+    # temp = edge.data['m']
     msg = edge.src['h'] * edge.src['norm']
     return {'m': msg}
 
@@ -74,10 +77,22 @@ class GCNLayer(nn.Module):
     def forward(self, h):
         if self.dropout:
             h = self.dropout(h)
+
+        temp = torch.mm(h, self.weight)
+        h_numpy = h.cpu().numpy()[:10]
         self.g.ndata['h'] = torch.mm(h, self.weight)
-        self.g.update_all(gcn_msg, gcn_reduce, self.node_update)
+        self.g.apply_edges(gcn_msg)
+
+        self.g.edata['m'] = torch.rand((13264, self.weight.shape[-1]))
+
+        temp2 = self.g.send(self.g.edges(), gcn_msg)
+        temp3 = self.g.recv(self.g.nodes(), gcn_reduce, self.node_update)
+        # self.g.update_all(gcn_msg, gcn_reduce, self.node_update)
+
         h = self.g.ndata.pop('h')
+        msg = self.g.edata['m']
         return h
+
 
 class GCN(nn.Module):
     def __init__(self,
@@ -91,10 +106,12 @@ class GCN(nn.Module):
         super(GCN, self).__init__()
         self.layers = nn.ModuleList()
         # input layer
-        self.layers.append(GCNLayer(g, in_feats, n_hidden, activation, dropout))
+        self.layers.append(
+            GCNLayer(g, in_feats, n_hidden, activation, dropout))
         # hidden layers
         for i in range(n_layers - 1):
-            self.layers.append(GCNLayer(g, n_hidden, n_hidden, activation, dropout))
+            self.layers.append(
+                GCNLayer(g, n_hidden, n_hidden, activation, dropout))
         # output layer
         self.layers.append(GCNLayer(g, n_hidden, n_classes, None, dropout))
 
@@ -103,6 +120,7 @@ class GCN(nn.Module):
         for layer in self.layers:
             h = layer(h)
         return h
+
 
 def evaluate(model, features, labels, mask):
     model.eval()
@@ -113,6 +131,7 @@ def evaluate(model, features, labels, mask):
         _, indices = torch.max(logits, dim=1)
         correct = torch.sum(indices == labels)
         return correct.item() * 1.0 / len(labels)
+
 
 def main(args):
     # load and preprocess dataset
@@ -216,19 +235,19 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='GCN')
     register_data_args(parser)
     parser.add_argument("--dropout", type=float, default=0.5,
-            help="dropout probability")
+                        help="dropout probability")
     parser.add_argument("--gpu", type=int, default=-1,
-            help="gpu")
+                        help="gpu")
     parser.add_argument("--lr", type=float, default=1e-2,
-            help="learning rate")
+                        help="learning rate")
     parser.add_argument("--n-epochs", type=int, default=200,
-            help="number of training epochs")
+                        help="number of training epochs")
     parser.add_argument("--n-hidden", type=int, default=16,
-            help="number of hidden gcn units")
+                        help="number of hidden gcn units")
     parser.add_argument("--n-layers", type=int, default=1,
-            help="number of hidden gcn layers")
+                        help="number of hidden gcn layers")
     parser.add_argument("--weight-decay", type=float, default=5e-4,
-            help="Weight for L2 loss")
+                        help="Weight for L2 loss")
     args = parser.parse_args()
     print(args)
 

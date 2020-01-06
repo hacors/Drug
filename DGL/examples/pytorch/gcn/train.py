@@ -1,5 +1,4 @@
-import argparse
-import time
+import argparse, time
 import numpy as np
 import networkx as nx
 import torch
@@ -10,8 +9,7 @@ from dgl.data import register_data_args, load_data
 
 # from gcn import GCN
 from gcn_mp import GCN
-# from gcn_spmv import GCN
-
+#from gcn_spmv import GCN
 
 def evaluate(model, features, labels, mask):
     model.eval()
@@ -23,11 +21,10 @@ def evaluate(model, features, labels, mask):
         correct = torch.sum(indices == labels)
         return correct.item() * 1.0 / len(labels)
 
-
 def main(args):
     # load and preprocess dataset
     data = load_data(args)
-    features = torch.FloatTensor(data.features)  # feature为node*feature的数据
+    features = torch.FloatTensor(data.features)
     labels = torch.LongTensor(data.labels)
     if hasattr(torch, 'BoolTensor'):
         train_mask = torch.BoolTensor(data.train_mask)
@@ -127,21 +124,21 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='GCN')
     register_data_args(parser)
     parser.add_argument("--dropout", type=float, default=0.5,
-                        help="dropout probability")
+            help="dropout probability")
     parser.add_argument("--gpu", type=int, default=-1,
-                        help="gpu")
+            help="gpu")
     parser.add_argument("--lr", type=float, default=1e-2,
-                        help="learning rate")
+            help="learning rate")
     parser.add_argument("--n-epochs", type=int, default=200,
-                        help="number of training epochs")
+            help="number of training epochs")
     parser.add_argument("--n-hidden", type=int, default=16,
-                        help="number of hidden gcn units")
+            help="number of hidden gcn units")
     parser.add_argument("--n-layers", type=int, default=1,
-                        help="number of hidden gcn layers")
+            help="number of hidden gcn layers")
     parser.add_argument("--weight-decay", type=float, default=5e-4,
-                        help="Weight for L2 loss")
+            help="Weight for L2 loss")
     parser.add_argument("--self-loop", action='store_true',
-                        help="graph self-loop (default=False)")
+            help="graph self-loop (default=False)")
     parser.set_defaults(self_loop=False)
     args = parser.parse_args('--dataset cora --gpu 0 --self-loop'.split())
     print(args)
