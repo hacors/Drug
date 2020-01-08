@@ -38,6 +38,13 @@ def split(data):
     return train, val, test
 
 
+def main(path):
+    data = get_data(path)
+    preprocess_data = preprocess(data)
+    train, val, test = split(preprocess_data)
+    return train, val, test
+
+
 if __name__ == '__main__':
     data = get_data('Data/bbbp_test.csv')
     preprocess_data = preprocess(data)
