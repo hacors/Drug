@@ -25,7 +25,7 @@ def get_data(path):
 
 def preprocess(data):
     feature_generator = rdNormalizedDescriptors.RDKit2DNormalized()
-    result = [MoleculeDatapoint(line, feature_generator) for line in data]
+    result = [[MoleculeDatapoint(line, feature_generator)] for line in data]
     return result
 
 
